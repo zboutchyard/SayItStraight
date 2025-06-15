@@ -1,0 +1,18 @@
+included:
+  - SayItStraight/Source
+
+opt_in_rules:
+  - empty_count
+  - explicit_type_interface
+
+disabled_rules:
+ - trailing_whitespace
+ - multiple_closures_with_trailing_closure
+ - identifier_name
+
+explicit_type_interface:
+  severity: error
+
+line_length:
+  warning: 120
+  error: 160

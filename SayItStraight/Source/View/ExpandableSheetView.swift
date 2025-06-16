@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct ExpandableSheetView: View {
+    @Bindable var viewModel: UserViewModel
     @State private var sheetOffset: CGFloat = UIScreen.main.bounds.height * 0.2
     @State private var dragOffset: CGFloat = 0
     private let collapsedHeight: CGFloat = UIScreen.main.bounds.height * 0.25
     private let expandedHeight: CGFloat = 0
-    let items: [HomeViewDataItem]
+    @State private var searchText: String = ""
     
     var body: some View {
         ZStack {
@@ -41,52 +42,74 @@ struct ExpandableSheetView: View {
                             }
                     )
             }
-        }
-    }
-    
-    var sheetContent: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                ForEach(items, id: \.revieweeName) { item in
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(.gray.opacity(0.15))
-                        .frame(height: 80)
-                        .overlay {
-                            HStack(alignment: .center) {
-                                profileImage(item: item)
-
-                                VStack(alignment: .leading) {
-                                    Text(item.revieweeName)
-                                        .font(.headline)
-                                    Text(item.reviewDate.formatted(date: .abbreviated, time: .omitted))
-                                        .font(.caption)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                                lieReviewView(item: item)
-                            }
-                            .padding(.horizontal)
-                            
-                        }
+            .onChange(of: searchText) { text, _ in
+                if text.count > 2 {
+                    Task {
+                        try? await viewModel.performSearch(searchText: text)
+                        print(viewModel.searchedUsers)
+                    }
                 }
             }
-            .padding()
-            .background(
-                GeometryReader { geo in
-                    Color(.white)
-                        .onChange(of: geo.frame(in: .global).minY) { newOffset, _ in
-                            if newOffset > 100 {
-                                withAnimation {
-                                    sheetOffset = collapsedHeight
-                                }
-                            }
-                        }
-                }
-            )
         }
-        .disabled(sheetOffset != expandedHeight) // prevent scroll unless full
     }
     
+    @ViewBuilder
+    var searchedUserData: some View {
+        VStack(spacing: 20) {
+            List(viewModel.searchedUsers, id: \.user_id) { searchedUser in
+                HStack(alignment: .center) {
+                    profileImage(searchedUser: searchedUser)
+                    VStack(alignment: .leading) {
+                        Text("\(searchedUser.firstName ?? "") \(searchedUser.lastName ?? "")")
+                            .font(.headline)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+    
+    @ViewBuilder
+    var sheetContent: some View {
+        NavigationView {
+            List {
+                if !viewModel.searchedUsers.isEmpty {
+                    Section(header: Text("Search Results")) {
+                        ForEach(viewModel.searchedUsers, id: \.user_id) { searchedUser in
+                            HStack(alignment: .center) {
+                                profileImage(searchedUser: searchedUser)
+                                VStack(alignment: .leading) {
+                                    Text("\(searchedUser.firstName ?? "") \(searchedUser.lastName ?? "")")
+                                        .font(.headline)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
+                }
+                Section(header: Text("Lie Reviews")) {
+                    ForEach(viewModel.items, id: \.revieweeName) { item in
+                        HStack(alignment: .center) {
+                            profileImage(item: item)
+                            VStack(alignment: .leading) {
+                                Text(item.revieweeName)
+                                    .font(.headline)
+                                Text(item.reviewDate.formatted(date: .abbreviated, time: .omitted))
+                                    .font(.caption)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            lieReviewView(item: item)
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+            }
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .automatic))
+        }
+    }
+
     @ViewBuilder
     func lieReviewView(item: HomeViewDataItem) -> some View {
         Text("\(Int(item.lieReviewPercentage * 100))% truthfulness")
@@ -103,8 +126,9 @@ struct ExpandableSheetView: View {
     }
     
     @ViewBuilder
-    func profileImage(item: HomeViewDataItem) -> some View {
-        AsyncImage(url: URL(string: item.revieweeImageURL)) { image in
+    func profileImage(item: HomeViewDataItem? = nil, searchedUser: SearchUserData? = nil) -> some View {
+        if let item = item {
+            AsyncImage(url: URL(string: item.revieweeImageURL)) { image in
                 image
                     .resizable()
                     .scaledToFill()
@@ -114,6 +138,19 @@ struct ExpandableSheetView: View {
             .frame(width: 60, height: 60)
             .clipShape(Circle())
             .clipped()
+        } else if let url = searchedUser?.photoURL {
+            AsyncImage(url: URL(string: url)) { image in
+                image
+                    .resizable()
+                    .scaledToFill()
+            } placeholder: {
+                Color.gray
+            }
+            .frame(width: 60, height: 60)
+            .clipShape(Circle())
+            .clipped()
+        }
+        
     }
 }
 
@@ -126,6 +163,6 @@ struct ExpandableSheetView: View {
             // swiftlint:disable:next line_length
             revieweeImageURL: "https://media.istockphoto.com/id/1682296067/photo/happy-studio-portrait-or-professional-man-real-estate-agent-or-asian-businessman-smile-for.jpg?s=2048x2048&w=is&k=20&c=4PPfwN_6yoEHwLeYK3S2Pi-Ck6JYEFLvUIrGpAHqpeQ=",
             reviewDate: Date())
-        ]
-    ExpandableSheetView(items: items)
+    ]
+    ExpandableSheetView(viewModel: UserViewModel())
 }

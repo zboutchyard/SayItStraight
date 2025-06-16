@@ -34,5 +34,7 @@
 	</array>
 	<key>GIDClientID</key>
 	<string>39729611328-08vc8u0he89kh6ttn89r2n34rfnvrgd2.apps.googleusercontent.com</string>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 </dict>
 </plist>

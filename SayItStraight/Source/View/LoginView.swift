@@ -50,9 +50,6 @@ struct LoginView: View {
         Button {
             Task {
                 try await bindableModel.signInWithGoogleNative()
-                if bindableModel.errors.isEmpty {
-                    coordinator.navigate(to: .containerView(coordinator: coordinator))
-                }
             }
         } label: {
             HStack {
@@ -79,9 +76,6 @@ struct LoginView: View {
                 }
                 Task {
                     try await bindableModel.authenticateWithApple(credential: credential)
-                    if bindableModel.errors.isEmpty {
-                        coordinator.navigate(to: .containerView(coordinator: coordinator))
-                    }
                 }
             }
         } label: {
@@ -131,9 +125,6 @@ struct LoginView: View {
             Button(action: {
                 Task {
                     try await bindableModel.loginUser()
-                    if bindableModel.errors.isEmpty {
-                        coordinator.navigate(to: .containerView(coordinator: coordinator))
-                    }
                 }
             }) {
                 Text("Log in")

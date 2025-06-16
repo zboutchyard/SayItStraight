@@ -13,6 +13,7 @@ struct SayItStraightApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var loginViewModel: LoginViewModel
     @State var coordinator: Coordinator = Coordinator()
+    @State private var id: UUID = UUID()
 
     let supabase: SupabaseClient
     
@@ -30,24 +31,26 @@ struct SayItStraightApp: App {
         tabBarAppearance.backgroundColor = UIColor(red: 0.994, green: 0.533, blue: 0.452, alpha: 1)
         tabBarAppearance.stackedLayoutAppearance.normal.iconColor = .white
         tabBarAppearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.white]
-
+        
         UITabBar.appearance().standardAppearance = tabBarAppearance
         if #available(iOS 15.0, *) {
             UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-        }    }
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
             Group {
                 VStack {
-                    if loginViewModel.isUserLoggedIn && coordinator.isSignedOut == false {
-                        ContainerView(coordinator: coordinator)
+                    if loginViewModel.isUserLoggedIn {
+                        ContainerView(client: supabase, coordinator: coordinator)
                     } else {
                         LandingView(coordinator: coordinator)
                     }
                 }
+                .id(id)
                 .task {
-                    await loginViewModel.checkUserLoggedIn()
+                    _ = try? await loginViewModel.getSession()
                 }
             }
             .environment(loginViewModel)

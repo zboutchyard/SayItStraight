@@ -35,12 +35,14 @@ class LoginViewModel {
     }
     
     @MainActor
-    func checkUserLoggedIn() async {
+    func getSession() async throws -> Session? {
         do {
-            let _: Session = try await supabase.auth.session
+            let session: Session = try await supabase.auth.session
             self.isUserLoggedIn = true
+            return session
         } catch {
             self.isUserLoggedIn = false
+            return nil
         }
     }
     
@@ -103,11 +105,13 @@ class LoginViewModel {
                 firstName: firstName,
                 lastName: lastName,
                 email: email,
-                user_id: userID
+                user_id: userID,
+                fullName: "\(firstName) \(lastName)"
             )
             if response.data.isEmpty {
                 try await addUser()
             }
+            isUserLoggedIn = true
         } catch {
             print("User fetch error: \(error)")
             errors.append("Failed to fetch user data.")

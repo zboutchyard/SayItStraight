@@ -12,8 +12,6 @@ import Supabase
 enum SayItStraightRoute: Hashable {
     static func == (lhs: SayItStraightRoute, rhs: SayItStraightRoute) -> Bool {
            switch (lhs, rhs) {
-           case (.registerView, .registerView):
-               return true
            default: return lhs.hashValue == rhs.hashValue
            }
        }
@@ -30,7 +28,7 @@ enum SayItStraightRoute: Hashable {
     case someOtherView
     case registerView(viewModel: LoginViewModel)
     case loginView(viewModel: LoginViewModel)
-    case containerView(coordinator: Coordinator)
+    case containerView(client: SupabaseClient)
     case settingsView
     case practiceView
     case analysisView

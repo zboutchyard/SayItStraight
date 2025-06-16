@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Supabase
 
 enum Tab {
     case add
@@ -16,30 +17,44 @@ enum Tab {
 struct ContainerView: View {
     @State private var selectedTab: Tab = .home
     @Bindable var coordinator: Coordinator
+    @Environment(LoginViewModel.self) private var viewModel: LoginViewModel
+    @State private var client: SupabaseClient
+    
+    init(client: SupabaseClient, coordinator: Coordinator) {
+        self.client = client
+        self.coordinator = coordinator
+    }
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            AddView()
-                .tabItem {
-                    Label("Add", systemImage: "plus.app.fill")
+        Group {
+            NavigationStack(path: $coordinator.path) {
+                TabView(selection: $selectedTab) {
+                    AddView()
+                        .tabItem {
+                            Label("Add", systemImage: "plus.app.fill")
+                        }
+                        .tag(Tab.add)
+                    HomeView()
+                        .tabItem {
+                            Label("Home", systemImage: "house.fill")
+                        }
+                        .tag(Tab.home)
+                    ProfileView(coordinator: coordinator, viewModel: ProfileViewModel(client: client))
+                        .tabItem {
+                            Label("Profile", systemImage: "person.crop.circle.fill")
+                        }
+                        .tag(Tab.profile)
                 }
-                .tag(Tab.add)
-            HomeView()
-                .tabItem {
-                    Label("Home", systemImage: "house.fill")
+                .task {
+                    coordinator.reset()
                 }
-                .tag(Tab.home)
-            ProfileView()
-                .tabItem {
-                    Label("Profile", systemImage: "person.crop.circle.fill")
+                .navigationBarBackButtonHidden()
+                .tint(Color(red: 0.767, green: 0.188, blue: 0.255))
+                .environment(coordinator)
+                .navigationDestination(for: SayItStraightRoute.self) { route in
+                    coordinator.view(for: route)
                 }
-                .tag(Tab.profile)
+            }
         }
-        .navigationBarBackButtonHidden()
-        .tint(Color(red: 0.767, green: 0.188, blue: 0.255))
     }
-}
-
-#Preview {
-    ContainerView(coordinator: Coordinator())
 }

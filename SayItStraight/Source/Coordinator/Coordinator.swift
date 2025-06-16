@@ -8,11 +8,11 @@
 import Foundation
 import SwiftUI
 import Observation
+import Supabase
 
 @Observable
 class Coordinator {
     var path: NavigationPath = NavigationPath()
-    var isSignedOut: Bool = false
 
     func navigate(to route: SayItStraightRoute) {
         path.append(route)
@@ -27,6 +27,10 @@ class Coordinator {
     func popToRoot() {
         path.removeLast(path.count)
     }
+    
+    func reset() {
+        path = NavigationPath()
+    }
 
     @ViewBuilder
     func view(for route: SayItStraightRoute) -> some View {
@@ -37,12 +41,12 @@ class Coordinator {
             RegisterView(bindableModel: viewModel)
         case .loginView(let viewModel):
             LoginView(bindableModel: viewModel)
-        case .containerView(let coordinator):
-            ContainerView(coordinator: coordinator)
+        case .containerView(let client):
+            ContainerView(client: client, coordinator: self)
         case .settingsView:
             SettingsView()
         case .practiceView:
-            EmptyView()
+            PracticeView()
         case .analysisView:
             EmptyView()
         }

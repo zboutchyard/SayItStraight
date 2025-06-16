@@ -72,9 +72,6 @@ struct RegisterView: View {
             Button(action: {
                 Task {
                     try await bindableModel.createUser()
-                    if bindableModel.errors.isEmpty {
-                        coordinator.navigate(to: .containerView(coordinator: coordinator))
-                    }
                 }
             }) {
                 Text("Register")
@@ -137,9 +134,6 @@ struct RegisterView: View {
         Button {
             Task {
                 try await bindableModel.signInWithGoogleNative()
-                if bindableModel.errors.isEmpty {
-                    coordinator.navigate(to: .containerView(coordinator: coordinator))
-                }
             }
         } label: {
             HStack {
@@ -166,9 +160,6 @@ struct RegisterView: View {
                 }
                 Task {
                     try await bindableModel.authenticateWithApple(credential: credential)
-                    if bindableModel.errors.isEmpty {
-                        coordinator.navigate(to: .containerView(coordinator: coordinator))
-                    }
                 }
             }
         } label: {
